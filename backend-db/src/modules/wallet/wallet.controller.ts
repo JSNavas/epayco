@@ -9,47 +9,36 @@ import { ConsultaSaldoDto } from './dto/consulta-saldo.dto';
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}
 
-  @Post('recarga-billetera')
-  async recargar(@Body() recargaDto: RecargaDto) {
-    const result = await this.walletService.recargar(recargaDto);
+  private formatResponse(result: any) {
     return {
       status: result.success ? 'success' : 'error',
       code: result.success ? 200 : 400,
       message: result.message,
       data: result.data,
     };
+  }
+
+  @Post('recarga-billetera')
+  async recargar(@Body() recargaDto: RecargaDto) {
+    const result = await this.walletService.recargar(recargaDto);
+    return this.formatResponse(result);
   }
 
   @Post('pagar')
   async pagar(@Body() pagoDto: PagoDto) {
     const result = await this.walletService.pagar(pagoDto);
-    return {
-      status: result.success ? 'success' : 'error',
-      code: result.success ? 200 : 400,
-      message: result.message,
-      data: result.data,
-    };
+    return this.formatResponse(result);
   }
 
   @Post('confirmar-pago')
   async confirmarPago(@Body() confirmarPagoDto: ConfirmarPagoDto) {
     const result = await this.walletService.confirmarPago(confirmarPagoDto);
-    return {
-      status: result.success ? 'success' : 'error',
-      code: result.success ? 200 : 400,
-      message: result.message,
-      data: result.data,
-    };
+    return this.formatResponse(result);
   }
 
   @Post('consulta-saldo')
   async consultarSaldo(@Body() consultaSaldoDto: ConsultaSaldoDto) {
     const result = await this.walletService.consultarSaldo(consultaSaldoDto);
-    return {
-      status: result.success ? 'success' : 'error',
-      code: result.success ? 200 : 400,
-      message: result.message,
-      data: result.data,
-    };
+    return this.formatResponse(result);
   }
 }

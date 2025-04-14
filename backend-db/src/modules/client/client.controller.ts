@@ -13,7 +13,7 @@ export class ClientController {
       return {
         status: 'error',
         code: 400,
-        message: 'Error al registrar el cliente, ya existe o datos inválidos',
+        message: 'Error al registrar el cliente, ya existe o los datos son inválidos',
         data: null,
       };
     }

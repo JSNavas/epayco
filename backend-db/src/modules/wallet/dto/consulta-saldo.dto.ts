@@ -1,9 +1,11 @@
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class ConsultaSaldoDto {
+  @IsString()
   @IsNotEmpty()
-  documento: string;
+  readonly documento: string;
 
+  @IsString()
   @IsNotEmpty()
-  celular: string;
+  readonly celular: string;
 }

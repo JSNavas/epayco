@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsPositive } from 'class-validator';
 
 export class RecargaDto {
   @IsString()
@@ -11,5 +11,6 @@ export class RecargaDto {
 
   @IsNotEmpty()
   @IsNumber()
+  @IsPositive()
   readonly valor: number;
 }

@@ -1,13 +1,16 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsPositive } from 'class-validator';
 
 export class PagoDto {
+  @IsString()
   @IsNotEmpty()
-  documento: string;
+  readonly documento: string;
 
+  @IsString()
   @IsNotEmpty()
-  celular: string;
+  readonly celular: string;
 
   @IsNotEmpty()
   @IsNumber()
-  valor: number;
+  @IsPositive()
+  readonly valor: number;
 }

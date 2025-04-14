@@ -3,11 +3,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { WalletService } from './wallet.service';
 import { WalletController } from './wallet.controller';
 import { Client } from '../client/entities/client.entity';
-import { EmailModule } from '../email/email.module';
+import { EmailModule } from '../../common/email/email.module';
 import { SessionToken } from './entities/session-token.entity';
-
+import { ResponseModule } from '../../common/response/response.module';
 @Module({
-  imports: [TypeOrmModule.forFeature([Client, SessionToken]), EmailModule],
+  imports: [TypeOrmModule.forFeature([Client, SessionToken]), EmailModule, ResponseModule],
   providers: [WalletService],
   controllers: [WalletController],
 })

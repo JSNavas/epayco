@@ -1,119 +1,124 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Client } from '../client/client.entity';
+import { Repository, DataSource } from 'typeorm';
+import { Client } from '../client/entities/client.entity';
 import { RecargaDto } from './dto/recarga.dto';
 import { PagoDto } from './dto/pago.dto';
 import { ConfirmarPagoDto } from './dto/confirmar-pago.dto';
 import { ConsultaSaldoDto } from './dto/consulta-saldo.dto';
-import * as nodemailer from 'nodemailer';
-import { v4 as uuidv4 } from 'uuid';
+import { EmailService } from '../email/email.service';
+import { SessionToken } from './entities/session-token.entity';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class WalletService {
-  private tokens: Map<string, { token: string; valor: number; clientId: number }> = new Map();
+  private readonly tokenExpirationTime = 15 * 60 * 1000; // 15 minutos de expiración para el token
 
   constructor(
     @InjectRepository(Client)
     private clientRepository: Repository<Client>,
+    @InjectRepository(SessionToken)
+    private sessionTokenRepository: Repository<SessionToken>,
+    private dataSource: DataSource,
+    private emailService: EmailService,
   ) {}
 
+  // Método de recarga con transacción y bloqueo pesimista
   async recargar(recargaDto: RecargaDto): Promise<any> {
     const { documento, celular, valor } = recargaDto;
-    const client = await this.clientRepository.findOne({ where: { documento, celular } });
-    if (!client) {
-      return { success: false, message: 'Cliente no encontrado', data: null };
+    try {
+      const result = await this.dataSource.transaction(async transactionalEntityManager => {
+        // Buscar el cliente con lock para evitar condiciones de carrera
+        const client = await transactionalEntityManager.findOne(Client, {
+          where: { documento, celular },
+          lock: { mode: 'pessimistic_write' },
+        });
+        if (!client) {
+          throw new BadRequestException('Cliente no encontrado');
+        }
+        // Actualizar el saldo de forma atómica
+        client.saldo = Number(client.saldo) + Number(valor);
+        await transactionalEntityManager.save(client);
+        return {
+          success: true,
+          message: 'Billetera recargada exitosamente',
+          data: { saldo: client.saldo },
+        };
+      });
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error en recarga-billetera',
+        data: error instanceof Error ? error.message : error,
+      };
     }
-
-    client.saldo = Number(client.saldo) + Number(valor);
-    await this.clientRepository.save(client);
-    return { success: true, message: 'Billetera recargada exitosamente', data: { saldo: client.saldo } };
   }
 
+  // Método para iniciar el pago: genera token y guarda datos temporalmente
   async pagar(pagoDto: PagoDto): Promise<any> {
     const { documento, celular, valor } = pagoDto;
     const client = await this.clientRepository.findOne({ where: { documento, celular } });
     if (!client) {
       return { success: false, message: 'Cliente no encontrado', data: null };
     }
-
     if (Number(client.saldo) < Number(valor)) {
       return { success: false, message: 'Saldo insuficiente', data: null };
     }
+    // Generar token de 6 dígitos y crear un identificador de sesión único
+    const token = crypto.randomBytes(3).toString('hex'); // Genera un token más seguro
+    const sessionToken = this.sessionTokenRepository.create({ token, valor: Number(valor), clientId: client.id });
+    await this.sessionTokenRepository.save(sessionToken);
 
-    // Generar token de 6 dígitos y un identificador de sesión único
-    const token = String(Math.floor(100000 + Math.random() * 900000));
-    const sessionId = uuidv4();
+    try {
+      // Enviar el token al correo del cliente
+      await this.emailService.sendMail(client.email, 'Token de Confirmación de Pago', `Tu token de confirmación es: ${token}`);
 
-    // Guardar token para confirmar el pago
-    this.tokens.set(sessionId, { token, valor: Number(valor), clientId: client.id });
-
-    // Configuracion de nodemailer
-    const transporter = nodemailer.createTransport({
-        host: process.env.MAIL_HOST,
-        port: parseInt(process.env.MAIL_PORT || '587', 10),
-        secure: false,
-        auth: {
-            user: process.env.MAIL_USER,
-            pass: process.env.MAIL_PASS,
-        },
-    });
-
-    const mailOptions = {
-      from: '"Billetera Virtual" <epayco@example.com>',
-      to: client.email,
-      subject: 'Token de Confirmación de Pago',
-      text: `Tu token de confirmación es: ${token}`,
-    };
-
-    // Enviar el correo con el token
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('Error enviando correo:', error);
-      } else {
-        console.log('Correo enviado:', info.response);
-      }
-    });
-
-    return {
-      success: true,
-      message: 'Token enviado al correo, confirma el pago con el sessionId y token',
-      data: { sessionId },
-    };
+      return {
+        success: true,
+        message: 'Token enviado al correo, confirma el pago con el sessionId y token',
+        data: { sessionId: sessionToken.id },
+      };
+    } catch (error) {
+      console.error('Error enviando el token:', error);
+      return { success: false, message: 'Error enviando token de confirmación', data: error };
+    }
   }
 
+  // Método para confirmar el pago y descontar el saldo, gestionado en transacción
   async confirmarPago(confirmarPagoDto: ConfirmarPagoDto): Promise<any> {
     const { sessionId, token } = confirmarPagoDto;
-    const record = this.tokens.get(sessionId);
-    if (!record) {
-      return { success: false, message: 'Session inválida o expirada', data: null };
+    const sessionToken = await this.sessionTokenRepository.findOne({ where: { id: sessionId } });
+
+    if (!sessionToken || sessionToken.token !== token || Date.now() - new Date(sessionToken.createdAt).getTime() > this.tokenExpirationTime) {
+      return { success: false, message: 'Token inválido o expirado', data: null };
     }
 
-    if (record.token !== token) {
-      return { success: false, message: 'Token inválido', data: null };
+    try {
+      // Busca y bloquea al cliente
+      const result = await this.dataSource.transaction(async transactionalEntityManager => {
+        const client = await transactionalEntityManager.findOne(Client, {
+          where: { id: sessionToken.clientId },
+          lock: { mode: 'pessimistic_write' },
+        });
+
+        if (!client || Number(client.saldo) < sessionToken.valor) throw new BadRequestException('Cliente no encontrado o saldo insuficiente');
+
+        client.saldo = Number(client.saldo) - sessionToken.valor;
+        await transactionalEntityManager.save(client);
+        await this.sessionTokenRepository.delete(sessionId);
+
+        return { success: true, message: 'Pago confirmado y saldo descontado', data: { saldo: client.saldo } };
+      });
+
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error en confirmar-pago',
+        data: error instanceof Error ? error.message : error,
+      };
     }
-
-    // Obtener el cliente y consultar el saldo
-    const client = await this.clientRepository.findOne({ where: { id: record.clientId } });
-    if (!client) {
-      return { success: false, message: 'Cliente no encontrado', data: null };
-    }
-
-    if (Number(client.saldo) < record.valor) {
-      return { success: false, message: 'Saldo insuficiente', data: null };
-    }
-
-    client.saldo = Number(client.saldo) - record.valor;
-    await this.clientRepository.save(client);
-
-    // El token se elimina una vez confirmado el pago
-    this.tokens.delete(sessionId);
-
-    return {
-      success: true,
-      message: 'Pago confirmado y saldo descontado',
-      data: { saldo: client.saldo },
-    };
   }
 
   async consultarSaldo(consultaSaldoDto: ConsultaSaldoDto): Promise<any> {

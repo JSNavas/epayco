@@ -1,13 +1,15 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class RecargaDto {
+  @IsString()
   @IsNotEmpty()
-  documento: string;
+  readonly documento: string;
 
+  @IsString()
   @IsNotEmpty()
-  celular: string;
+  readonly celular: string;
 
   @IsNotEmpty()
   @IsNumber()
-  valor: number;
+  readonly valor: number;
 }

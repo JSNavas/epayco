@@ -1,7 +1,7 @@
 {
   "name": "backend-db",
   "version": "0.0.1",
-  "description": "",
+  "description": "Servicio NestJS para acceso a la base de datos y manejo de la lógica de negocio",
   "author": "",
   "private": true,
   "license": "UNLICENSED",

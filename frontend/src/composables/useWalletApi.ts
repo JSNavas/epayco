@@ -9,7 +9,7 @@ import { ApiResponse,  ApiMethod, ApiError } from 'src/services/interfaces/api.i
 export function useWalletApi() {
   const registerClient: ApiMethod<RegisterRequest> = async (payload) => {
     try {
-      const response = await api.post<ApiResponse>('/cliente/registro', payload);
+      const response = await api.post<ApiResponse>('/client/register', payload);
       return response.data;
     } catch (error: unknown) {
       const axiosError = error as ApiError;
@@ -19,7 +19,7 @@ export function useWalletApi() {
 
   const recharge: ApiMethod<RechargeRequest> = async (payload) => {
     try {
-      const response = await api.post<ApiResponse>('/recarga-billetera', payload);
+      const response = await api.post<ApiResponse>('/wallet/recharge', payload);
       return response.data;
     } catch (error: unknown) {
       const axiosError = error as ApiError;
@@ -29,7 +29,7 @@ export function useWalletApi() {
 
   const pay: ApiMethod<PaymentRequest> = async (payload) => {
     try {
-      const response = await api.post<ApiResponse>('/pagar', payload);
+      const response = await api.post<ApiResponse>('/wallet/pay', payload);
       return response.data;
     } catch (error: unknown) {
       const axiosError = error as ApiError;
@@ -39,7 +39,7 @@ export function useWalletApi() {
 
   const confirmPayment: ApiMethod<ConfirmPaymentResponse> = async (payload) => {
     try {
-      const response = await api.post<ApiResponse>('/confirmar-pago', payload);
+      const response = await api.post<ApiResponse>('/wallet/confirm-payment', payload);
       return response.data;
     } catch (error: unknown) {
       const axiosError = error as ApiError;
@@ -49,7 +49,7 @@ export function useWalletApi() {
 
   const totalBalance: ApiMethod<TotalBalanceRequest> = async (payload) => {
     try {
-      const response = await api.post<ApiResponse>('/consulta-saldo', payload);
+      const response = await api.post<ApiResponse>('/wallet/total-balance', payload);
       return response.data;
     } catch (error: unknown) {
       const axiosError = error as ApiError;

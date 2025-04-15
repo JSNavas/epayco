@@ -2,10 +2,10 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Client } from '../client/entities/client.entity';
-import { RecargaDto } from './dto/recarga.dto';
-import { PagoDto } from './dto/pago.dto';
-import { ConfirmarPagoDto } from './dto/confirmar-pago.dto';
-import { ConsultaSaldoDto } from './dto/consulta-saldo.dto';
+import { RechargeDto } from './dto/recharge.dto';
+import { PaymentDto } from './dto/payment.dto';
+import { ConfirmPaymentDto } from './dto/confirm-payment.dto';
+import { TotalBalanceDto } from './dto/total-balance.dto';
 import { EmailService } from '../../common/email/email.service';
 import { SessionToken } from './entities/session-token.entity';
 import * as crypto from 'crypto';
@@ -25,16 +25,16 @@ export class WalletService {
   ) {}
 
   // Método de recarga con transacción y bloqueo pesimista
-  async recargar(recargaDto: RecargaDto): Promise<any> {
-    const { documento, celular, valor } = recargaDto;
+  async recharge(recharge: RechargeDto): Promise<any> {
+    const { documento, celular, valor } = recharge;
 
     try {
       return await this.dataSource.transaction(async manager => {
         const client = await this.findClientWithLock(manager, { documento, celular });
-        client.saldo += Number(valor);
+        client.saldo = Number(client.saldo) + Number(valor);
         await manager.save(client);
 
-        return this.responseService.buildSuccessResponse('Billetera recargada exitosamente', { saldo: client.saldo });
+        return this.responseService.buildSuccessResponse('Billetera recargada exitosamente', client);
       });
     } catch (error) {
       this.logger.error('Error en recarga-billetera', error);
@@ -43,8 +43,8 @@ export class WalletService {
   }
 
   // Método para iniciar el pago
-  async pagar(pagoDto: PagoDto): Promise<any> {
-    const { documento, celular, valor } = pagoDto;
+  async pay(payment: PaymentDto): Promise<any> {
+    const { documento, celular, valor } = payment;
 
     try {
       const client = await this.clientRepository.findOne({ where: { documento, celular } });
@@ -63,8 +63,8 @@ export class WalletService {
   }
 
   // Método para confirmar el pago y descontar el saldo, gestionado en transacción
-  async confirmarPago(confirmarPagoDto: ConfirmarPagoDto): Promise<any> {
-    const { sessionId, token } = confirmarPagoDto;
+  async confirmPayment(confirmPaymentDto: ConfirmPaymentDto): Promise<any> {
+    const { sessionId, token } = confirmPaymentDto;
 
     try {
       return await this.dataSource.transaction(async manager => {
@@ -82,7 +82,7 @@ export class WalletService {
 
         await manager.delete(SessionToken, { id: sessionToken.id });
 
-        return this.responseService.buildSuccessResponse('Pago confirmado y saldo descontado', { saldo: client.saldo });
+        return this.responseService.buildSuccessResponse('Su pago ha sido confirmado', client);
       });
     } catch (error) {
       this.logger.error('Error en confirmar-pago', error);
@@ -91,14 +91,14 @@ export class WalletService {
   }
 
   // Método para consultar el saldo del cliente
-  async consultarSaldo(consultaSaldoDto: ConsultaSaldoDto): Promise<any> {
-    const { documento, celular } = consultaSaldoDto;
+  async totalBalance(totalBalance: TotalBalanceDto): Promise<any> {
+    const { documento, celular } = totalBalance;
 
     try {
       const client = await this.clientRepository.findOne({ where: { documento, celular } });
       if (!client) return this.responseService.buildErrorResponse('Cliente no encontrado');
 
-      return this.responseService.buildSuccessResponse('Consulta exitosa', { saldo: client.saldo });
+      return this.responseService.buildSuccessResponse('Consulta exitosa', {...client, saldo: Number(client.saldo)});
     } catch (error) {
       this.logger.error('Error consultando saldo', error);
       return this.responseService.buildErrorResponse('Error consultando saldo', error.message);

@@ -6,58 +6,58 @@ import { firstValueFrom } from 'rxjs';
 export class WalletService {
   constructor(private readonly httpService: HttpService) {}
 
-  async recargar(payload: any): Promise<any> {
+  async recharge(payload: any): Promise<any> {
     try {
       const response = await firstValueFrom(
-        this.httpService.post('/recarga-billetera', payload)
+        this.httpService.post('/wallet/recharge', payload)
       );
       return response.data;
     } catch (error) {
       return {
         status: 'error',
         code: 400,
-        message: 'Error en recarga-billetera',
+        message: 'Error al recargar la billetera',
         data: error.response?.data || error.message,
       };
     }
   }
 
-  async pagar(payload: any): Promise<any> {
+  async pay(payload: any): Promise<any> {
     try {
       const response = await firstValueFrom(
-        this.httpService.post('/pagar', payload)
+        this.httpService.post('/wallet/pay', payload)
       );
       return response.data;
     } catch (error) {
       return {
         status: 'error',
         code: 400,
-        message: 'Error en pagar',
+        message: 'Error al realizar el pago',
         data: error.response?.data || error.message,
       };
     }
   }
 
-  async confirmarPago(payload: any): Promise<any> {
+  async confirmPayment(payload: any): Promise<any> {
     try {
       const response = await firstValueFrom(
-        this.httpService.post('/confirmar-pago', payload)
+        this.httpService.post('/wallet/confirm-payment', payload)
       );
       return response.data;
     } catch (error) {
       return {
         status: 'error',
         code: 400,
-        message: 'Error en confirmar-pago',
+        message: 'Error al confirmar el pago',
         data: error.response?.data || error.message,
       };
     }
   }
 
-  async consultarSaldo(payload: any): Promise<any> {
+  async totalBalance(payload: any): Promise<any> {
     try {
       const response = await firstValueFrom(
-        this.httpService.post('/consulta-saldo', payload)
+        this.httpService.post('/wallet/total-balance', payload)
       );
       return response.data;
     } catch (error) {

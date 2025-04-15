@@ -11,7 +11,7 @@ export class ClientService {
     private clientRepository: Repository<Client>,
   ) {}
 
-  async registrarCliente(createClienteDto: CreateClientDto): Promise<Client | null> {
+  async registerClient(createClienteDto: CreateClientDto): Promise<Client | null> {
     const clientExists = await this.clientRepository.findOne({
       where: [{ documento: createClienteDto.documento }, { email: createClienteDto.email }],
     });

@@ -1,14 +1,13 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { ClientService } from './client.service';
 import { CreateClientDto } from './dto/create-client.dto';
-
-@Controller('registro-cliente')
+@Controller('client')
 export class ClientController {
   constructor(private readonly clientService: ClientService) {}
 
-  @Post()
+  @Post('register')
   async registroCliente(@Body() createClientDto: CreateClientDto) {
-    const result = await this.clientService.registrarCliente(createClientDto);
+    const result = await this.clientService.registerClient(createClientDto);
     if (!result) {
       return {
         status: 'error',

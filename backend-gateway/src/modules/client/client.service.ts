@@ -6,17 +6,17 @@ import { firstValueFrom } from 'rxjs';
 export class ClientService {
   constructor(private readonly httpService: HttpService) {}
 
-  async registrarCliente(payload: any): Promise<any> {
+  async registerClient(payload: any): Promise<any> {
     try {
       const response = await firstValueFrom(
-        this.httpService.post('/registro-cliente', payload)
+        this.httpService.post('/client/register', payload)
       );
       return response.data;
     } catch (error) {
       return {
         status: 'error',
         code: 400,
-        message: 'Error en registro-cliente',
+        message: 'Hubo un error al registrar el cliente',
         data: error.response?.data || error.message,
       };
     }

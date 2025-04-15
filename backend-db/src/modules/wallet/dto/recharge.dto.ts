@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber, IsString, IsPositive } from 'class-validator';
 
-export class PagoDto {
+export class RechargeDto {
   @IsString()
   @IsNotEmpty()
   readonly documento: string;

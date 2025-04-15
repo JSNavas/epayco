@@ -3,9 +3,32 @@ import {
   createMemoryHistory,
   createRouter,
   createWebHashHistory,
-  createWebHistory,
+  createWebHistory
 } from 'vue-router';
-import routes from './routes';
+import type { RouteRecordRaw } from 'vue-router';
+import MainLayout from 'src/layouts/MainLayout.vue';
+
+// routes
+import { authRoutes } from './routes/auth.routes';
+import { walletRoutes } from './routes/wallet.routes';
+
+// Define routes
+const routes: RouteRecordRaw[] = [
+  {
+    path: '/',
+    component: MainLayout,
+    children: [
+      { path: '', redirect: { name: 'register' } },
+      ...authRoutes,
+      ...walletRoutes,
+    ],
+  },
+  {
+    path: '/:catchAll(.*)*',
+    name: 'error-404',
+    component: () => import('pages/ErrorNotFound.vue')
+  },
+];
 
 /*
  * If not building with SSR mode, you can

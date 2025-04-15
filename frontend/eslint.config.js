@@ -38,10 +38,11 @@ export default defineConfigWithVueTs(
   {
     files: ['**/*.ts', '**/*.vue'],
     rules: {
-      '@typescript-eslint/consistent-type-imports': [
-        'error',
-        { prefer: 'type-imports' }
-      ],
+      'prefer-promise-reject-errors': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
+
+      // allow debugger during development only
+      'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off'
     }
   },
   // https://github.com/vuejs/eslint-config-typescript

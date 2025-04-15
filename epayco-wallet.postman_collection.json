@@ -1,0 +1,165 @@
+{
+	"info": {
+		"_postman_id": "1de4289a-309e-42df-b413-d0327b32fb37",
+		"name": "epayco-wallet",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "2306141"
+	},
+	"item": [
+		{
+			"name": "registro cliente",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"documento\": \"123456789\",\n  \"nombres\": \"Jesus Navas\",\n  \"email\": \"jesusnavas210@gmail.com\",\n  \"celular\": \"4146852065\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/client/register",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"client",
+						"register"
+					]
+				},
+				"description": "Endpoint para registrar los clientes requiere de 4 campos documento, nombres, email y celular para poder realizar un registro exitoso. (Tome en cuenta que en el correo registrado será a donde se mandarán las confirmaciones de pago)"
+			},
+			"response": []
+		},
+		{
+			"name": "recarga billetera",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"documento\": \"123456789\",\n  \"celular\": \"4146852065\",\n  \"valor\": 100\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/wallet/recharge",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"wallet",
+						"recharge"
+					]
+				},
+				"description": "Endpoint para realizar recargas del balance solo requiere de 3 campos documento, celular y el valor a recargar."
+			},
+			"response": []
+		},
+		{
+			"name": "pagar",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"documento\": \"123456789\",\n  \"celular\": \"4146852065\",\n  \"valor\": 50\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/wallet/pay",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"wallet",
+						"pay"
+					]
+				},
+				"description": "Endpoint para realizar pagos solo requiere de 3 campos documento, celular y el valor a pagar."
+			},
+			"response": []
+		},
+		{
+			"name": "confirmar pago",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"sessionId\": \"bc16d2eb-9b8b-492d-a272-11cf510137f7\",\n  \"token\": \"c558f6\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/wallet/confirm-payment",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"wallet",
+						"confirm-payment"
+					]
+				},
+				"description": "Endpoint para confirmar pagos, se debe usar el \"sessionId\" generado al pagar y luego el token enviado al correo asociado a la cuenta registrada."
+			},
+			"response": []
+		},
+		{
+			"name": "consulta saldo",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"documento\": \"123456789\",\n  \"celular\": \"4146852065\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/wallet/total-balance",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"wallet",
+						"total-balance"
+					]
+				},
+				"description": "Endpoint para consultar el saldo o balance disponible solo requiere de 2 campos documento y celular."
+			},
+			"response": []
+		}
+	]
+}

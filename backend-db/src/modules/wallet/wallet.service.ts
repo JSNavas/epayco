@@ -32,6 +32,9 @@ export class WalletService {
     try {
       return await this.dataSource.transaction(async manager => {
         const client = await this.findClientWithLock(manager, { documento, celular });
+
+        if (!client) return this.responseService.buildErrorResponse('Cliente no encontrado');
+
         client.saldo = Number(client.saldo) + Number(valor);
         await manager.save(client);
 
@@ -86,6 +89,8 @@ export class WalletService {
         }
 
         const client = await this.findClientWithLock(manager, { id: sessionToken.clientId });
+        
+        if (!client) return this.responseService.buildErrorResponse('Cliente no encontrado');
         if (Number(client.saldo) < sessionToken.valor) return this.responseService.buildErrorResponse('Saldo insuficiente');
 
         client.saldo -= sessionToken.valor;
@@ -151,7 +156,6 @@ export class WalletService {
       where: whereCondition,
       lock: { mode: 'pessimistic_write' },
     });
-    if (!client) throw new BadRequestException('Cliente no encontrado');
     return client;
   }
 

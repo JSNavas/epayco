@@ -16,8 +16,8 @@ export class WalletService {
       return {
         status: 'error',
         code: 400,
-        message: 'Error al recargar la billetera',
-        data: error.response?.data || error.message,
+        message: error.response?.data || error.message,
+        data: null,
       };
     }
   }
@@ -32,8 +32,8 @@ export class WalletService {
       return {
         status: 'error',
         code: 400,
-        message: 'Error al realizar el pago',
-        data: error.response?.data || error.message,
+        message: error.response?.data || error.message,
+        data: null,
       };
     }
   }
@@ -48,8 +48,8 @@ export class WalletService {
       return {
         status: 'error',
         code: 400,
-        message: 'Error al confirmar el pago',
-        data: error.response?.data || error.message,
+        message: error.response?.data || error.message,
+        data: null,
       };
     }
   }
@@ -64,8 +64,8 @@ export class WalletService {
       return {
         status: 'error',
         code: 400,
-        message: 'Error al consultar el saldo total',
-        data: error.response?.data || error.message,
+        message: error.response?.data || error.message,
+        data: null,
       };
     }
   }
@@ -80,8 +80,8 @@ export class WalletService {
       return {
         status: 'error',
         code: 400,
-        message: 'Error al consultar las transacciones',
-        data: error.response?.data || error.message,
+        message: error.response?.data || error.message,
+        data: null,
       };
     }
   }

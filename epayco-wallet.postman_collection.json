@@ -13,7 +13,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"documento\": \"123456789\",\n  \"nombres\": \"Jesus Navas\",\n  \"email\": \"jesusnavas210@gmail.com\",\n  \"celular\": \"4146852065\"\n}\n",
+					"raw": "{\n  \"documento\": \"25544312\",\n  \"nombres\": \"Jesus Navas\",\n  \"email\": \"jesusnavas210@gmail.com\",\n  \"celular\": \"4146852065\"\n}\n",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -44,7 +44,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"documento\": \"123456789\",\n  \"celular\": \"4146852065\",\n  \"valor\": 100\n}",
+					"raw": "{\n  \"documento\": \"25544312\",\n  \"celular\": \"4146852065\",\n  \"valor\": 100\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -75,7 +75,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"documento\": \"123456789\",\n  \"celular\": \"4146852065\",\n  \"valor\": 50\n}",
+					"raw": "{\n  \"documento\": \"25544312\",\n  \"celular\": \"4146852065\",\n  \"valor\": 50\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -137,7 +137,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"documento\": \"123456789\",\n  \"celular\": \"4146852065\"\n}\n",
+					"raw": "{\n  \"documento\": \"25544312\",\n  \"celular\": \"4146852065\"\n}\n",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -158,6 +158,40 @@
 					]
 				},
 				"description": "Endpoint para consultar el saldo o balance disponible solo requiere de 2 campos documento y celular."
+			},
+			"response": []
+		},
+		{
+			"name": "consultar transacciones",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"documento\": \"25544312\",\n  \"celular\": \"4146852065\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/wallet/transactions",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"wallet",
+						"transactions"
+					]
+				},
+				"description": "Endpoint para consultar el historial de transacciones solo requiere de 2 campos documento y celular."
 			},
 			"response": []
 		}

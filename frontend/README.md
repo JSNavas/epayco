@@ -1,40 +1,33 @@
-# Quasar App (frontend)
+## Epayco Frontend
 
-A Quasar Project
+[Quasar](https://quasar.dev/start/how-to-use-vue) framework to Vue 3.
 
-## Install the dependencies
+## Project setup
+
 ```bash
-yarn
-# or
-npm install
+# requirements
+- running backend-db on http://localhost:3001
+- running backend-gateway on http://localhost:3000
+node version >= 18.0.0
+
+# Create a .env file in the root directory and add the variables located in the .env.example file
+touch .env
+
+# Url where the backend-gateway is running
+VITE_API_URL=http://localhost:3000/api
+
+```bash
+# install dependencies
+$ npm install
+
+# If you encounter an error, install the Quasar CLI globally
+$ npm install -g @quasar/cli
 ```
 
-### Start the app in development mode (hot-code reloading, error reporting, etc.)
+## Compile and run frontend
+
 ```bash
-quasar dev
+# development
+$ quasar dev
+- running complete app on http://localhost:9001
 ```
-
-
-### Lint the files
-```bash
-yarn lint
-# or
-npm run lint
-```
-
-
-### Format the files
-```bash
-yarn format
-# or
-npm run format
-```
-
-
-### Build the app for production
-```bash
-quasar build
-```
-
-### Customize the configuration
-See [Configuring quasar.config.js](https://v2.quasar.dev/quasar-cli-vite/quasar-config-js).

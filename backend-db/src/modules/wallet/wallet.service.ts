@@ -2,15 +2,16 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Client } from '../client/entities/client.entity';
+import { SessionToken } from './entities/session-token.entity';
+import { Transaction, TransactionType } from './entities/transaction.entity';
 import { RechargeDto } from './dto/recharge.dto';
 import { PaymentDto } from './dto/payment.dto';
 import { ConfirmPaymentDto } from './dto/confirm-payment.dto';
 import { TotalBalanceDto } from './dto/total-balance.dto';
+import { TransactionDto } from './dto/transaction.dto';
 import { EmailService } from '../../common/email/email.service';
-import { SessionToken } from './entities/session-token.entity';
-import * as crypto from 'crypto';
 import { ResponseService } from '../../common/response/response.service';
-
+import * as crypto from 'crypto';
 @Injectable()
 export class WalletService {
   private readonly logger = new Logger(WalletService.name);
@@ -34,6 +35,15 @@ export class WalletService {
         client.saldo = Number(client.saldo) + Number(valor);
         await manager.save(client);
 
+        // Registra la transacción
+        const history = manager.create(Transaction, {
+          clientId: client.id,
+          type: TransactionType.RECHARGE,
+          amount: valor,
+          description: 'Recarga',
+        });
+        await manager.save(history);
+
         return this.responseService.buildSuccessResponse('Billetera recargada exitosamente', client);
       });
     } catch (error) {
@@ -55,6 +65,7 @@ export class WalletService {
       const sessionToken = this.sessionTokenRepository.create({ token, valor: Number(valor), clientId: client.id });
       await this.sessionTokenRepository.save(sessionToken);
       
+      // Envia el token por correo electrónico
       return await this.sendTokenByEmail(client, token, sessionToken.id);
     } catch (error) {
       this.logger.error('Error en proceso de pago', error);
@@ -79,7 +90,17 @@ export class WalletService {
 
         client.saldo -= sessionToken.valor;
         await manager.save(client);
+        
+        // Registra la transacción
+        const history = manager.create(Transaction, {
+          clientId: client.id,
+          type: TransactionType.PAYMENT,
+          amount: sessionToken.valor,
+          description: 'Compra',
+        });
+        await manager.save(history);
 
+        // Elimina el token de sesión despues de usarlo
         await manager.delete(SessionToken, { id: sessionToken.id });
 
         return this.responseService.buildSuccessResponse('Su pago ha sido confirmado', client);
@@ -102,6 +123,26 @@ export class WalletService {
     } catch (error) {
       this.logger.error('Error consultando saldo', error);
       return this.responseService.buildErrorResponse('Error consultando saldo', error.message);
+    }
+  }
+
+  // Método para consultar el historial de transacciones
+  async transactions(transactionDto: TransactionDto): Promise<any> {
+    const { documento, celular } = transactionDto;
+
+    try {
+      const client = await this.clientRepository.findOne({ where: { documento, celular } });
+      if (!client) return this.responseService.buildErrorResponse('Cliente no encontrado');
+
+      const transactions = await this.dataSource.getRepository(Transaction).find({
+        where: { clientId: client.id },
+        order: { createdAt: 'DESC' }
+      });
+      
+      return this.responseService.buildSuccessResponse('Transacciones consultadas exitosamente', transactions);
+    } catch (error) {
+      this.logger.error('Error al consultar las transacciones', error);
+      return this.responseService.buildErrorResponse('Error al consultar las transacciones', error.message);
     }
   }
 

@@ -64,7 +64,23 @@ export class WalletService {
       return {
         status: 'error',
         code: 400,
-        message: 'Error en consulta-saldo',
+        message: 'Error al consultar el saldo total',
+        data: error.response?.data || error.message,
+      };
+    }
+  }
+
+  async transactions(payload: any): Promise<any> {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post('/wallet/transactions', payload)
+      );
+      return response.data;
+    } catch (error) {
+      return {
+        status: 'error',
+        code: 400,
+        message: 'Error al consultar las transacciones',
         data: error.response?.data || error.message,
       };
     }

@@ -4,6 +4,7 @@ import { RechargeRequest } from 'src/services/interfaces/recharge.interface'
 import { TotalBalanceRequest } from 'src/services/interfaces/totalBalance.interface';
 import { RegisterRequest } from 'src/services/interfaces/client.interface';
 import { ApiResponse,  ApiMethod, ApiError } from 'src/services/interfaces/api.interface';
+import { TransactionRequest } from 'src/services/interfaces/transaction.interface';
 
 // API Composables
 export function useWalletApi() {
@@ -56,11 +57,23 @@ export function useWalletApi() {
       return { status: 'error', code: axiosError.response?.status || 500, message: axiosError.message, data: null };
     }
   };
+
+  const transactions: ApiMethod<TransactionRequest> = async (payload) => {
+    try {
+      const response = await api.post<ApiResponse>('/wallet/transactions', payload);
+      return response.data;
+    } catch (error: unknown) {
+      const axiosError = error as ApiError;
+      return { status: 'error', code: axiosError.response?.status || 500, message: axiosError.message, data: null };
+    }
+  };
+
   return {
     registerClient,
     recharge,
     pay,
     confirmPayment,
     totalBalance,
+    transactions,
   };
 }

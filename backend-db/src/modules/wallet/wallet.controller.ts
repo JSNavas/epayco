@@ -4,7 +4,7 @@ import { RechargeDto } from './dto/recharge.dto';
 import { PaymentDto } from './dto/payment.dto';
 import { ConfirmPaymentDto } from './dto/confirm-payment.dto';
 import { TotalBalanceDto } from './dto/total-balance.dto';
-
+import { TransactionDto } from './dto/transaction.dto';
 @Controller('wallet')
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}
@@ -27,5 +27,10 @@ export class WalletController {
   @Post('total-balance')
   async totalBalance(@Body() totalBalance: TotalBalanceDto) {
     return await this.walletService.totalBalance(totalBalance);
+  }
+
+  @Post('transactions')
+  async transactions(@Body() transactions: TransactionDto) {
+    return await this.walletService.transactions(transactions);
   }
 }

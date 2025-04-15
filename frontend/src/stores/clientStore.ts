@@ -18,5 +18,15 @@ export const useClientStore = defineStore('client', {
     setLoginStatus(status: boolean) {
       this.isLoggedIn = status;
     },
+    clearClientData() {
+      this.clientData = {
+        documento: '',
+        celular: '',
+        email: '',
+        nombres: '',
+        saldo: 0,
+      };
+      this.isLoggedIn = false;
+    }
   },
 });

@@ -7,7 +7,24 @@
             <div class="text-h5 text-bold text-secondary">Billetera Virtual Epayco</div>
             <div class="text-subtitle2 text-grey-7">Consulta tu saldo y transacciones</div>
           </div>
-            <q-btn text-color="primary" color="white" outline icon="account_balance_wallet" label="Consultar" @click="showConsulta = true" />
+          <div class="row q-gutter-sm"> <!-- Agregamos un contenedor con espaciado -->
+            <q-btn
+              text-color="primary"
+              color="white"
+              outline
+              icon="account_balance_wallet"
+              label="Consultar"
+              @click="showConsulta = true"
+            />
+            <q-btn
+              v-if="clientStore.isLoggedIn"
+              color="negative"
+              outline
+              icon="logout"
+              label="Salir"
+              @click="handleLogout"
+            />
+          </div>
         </div>
 
         <div class="q-mb-md">
@@ -41,28 +58,29 @@
         </q-card>
 
         <!-- Historial de Transacciones -->
-        <q-card class="q-pa-md shadow-1" v-if="clientStore.isLoggedIn">
+        <q-card class="q-pa-md shadow-1" v-if="clientStore.isLoggedIn && transactionStore.transactions.length">
           <q-card-section>
             <div class="row items-center">
               <div class="text-h6 text-bold text-primary">Historial de Transacciones</div>
-              <div class="text-grey-7 q-ml-xs">(simuladas)</div>
             </div>
-
-
           </q-card-section>
+
           <q-separator />
+
           <q-list bordered>
-            <q-item v-for="(tx, index) in transactions" :key="index" clickable>
+            <q-item v-for="(tx, index) in transactionStore.transactions" :key="index" clickable>
               <q-item-section avatar>
-                <q-icon :name="tx.amount > 0 ? 'arrow_upward' : 'arrow_downward'" :color="tx.amount > 0 ? 'green' : 'red'" />
+                <q-icon :name="tx.type === 'recharge' ? 'arrow_upward' : 'arrow_downward'" :color="tx.type === 'recharge' ? 'green' : 'red'" />
               </q-item-section>
+
               <q-item-section>
-                <div class="text-body1">{{ tx.title }}</div>
-                <div class="text-caption text-grey-7">{{ tx.date }}</div>
+                <div class="text-body1">{{ tx.description }}</div>
+                <div class="text-caption text-grey-7">{{ new Date(tx.createdAt).toLocaleString() }}</div>
               </q-item-section>
+
               <q-item-section side>
-                <div :class="tx.amount > 0 ? 'text-green' : 'text-red'">
-                  {{ tx.amount > 0 ? '+' : '' }}{{ formatCurrency(tx.amount) }}
+                <div :class="tx.type === 'recharge' ? 'text-green' : 'text-red'">
+                  {{ tx.type === 'recharge' ? '+' : '-' }}{{ formatCurrency(Number(tx.amount)) }}
                 </div>
               </q-item-section>
             </q-item>
@@ -130,29 +148,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, type Ref } from 'vue';
+import { ref, watch, onMounted, type Ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Notify } from 'quasar';
 import { useWalletApi } from 'src/composables/useWalletApi';
 import { useClientStore } from 'src/stores/clientStore';
+import { useTransactionStore } from 'src/stores/transactionStore';
 import { PaymentRequest } from 'src/services/interfaces/payment.interface';
 import { ClientData } from 'src/services/interfaces/client.interface';
 import { RechargeRequest } from 'src/services/interfaces/recharge.interface';
 import { TotalBalanceRequest } from 'src/services/interfaces/totalBalance.interface';
 import { ApiResponse } from 'src/services/interfaces/api.interface';
-
-// transacciones simuladas
-const transactions = ref([
-  { title: 'Recarga', date: 'Hoy, 14:00', amount: 200.00 },
-  { title: 'Compra', date: 'Hoy, 11:30', amount: -150.00 },
-  { title: 'Recarga', date: 'Ayer, 16:45', amount: 300.00 },
-]);
+import { Transaction, TransactionRequest } from 'src/services/interfaces/transaction.interface';
 
 // store
 const clientStore = useClientStore();
+const transactionStore = useTransactionStore();
 
 // compoasables
-const { recharge, pay, totalBalance } = useWalletApi();
+const { recharge, pay, totalBalance, transactions } = useWalletApi();
 
 // Estado para mostrar modales
 const showRecarga = ref(false);
@@ -257,12 +271,69 @@ const handlePayment = async () => {
   }
 };
 
+const fetchTransactions = async ()  => {
+  const payload: TransactionRequest = {
+    documento: clientStore.clientData.documento,
+    celular: clientStore.clientData.celular
+  };
+  try {
+    const res = await transactions(payload);
+
+    if (res.status === 'success') {
+      transactionStore.setTransactions(res.data as Transaction[]);
+    } else {
+      showError(res.message);
+    }
+  } catch (error) {
+    showError(error instanceof Error ? error.message : 'No se ha podido consultar las transacciones');
+  }
+}
+
+const handleLogout = () => {
+  // Limpiar datos del cliente
+  clientStore.clearClientData();
+  clientStore.setLoginStatus(false);
+
+  // Limpiar transacciones
+  transactionStore.clearTransactions();
+
+  // Limpiar formularios
+  recarga.value = { documento: '', celular: '', valor: 0 };
+  pago.value = { documento: '', celular: '', valor: 0 };
+  consulta.value = { documento: '', celular: '' };
+
+  // Mostrar notificación
+  Notify.create({
+    type: 'dark',
+    message: 'Sesión cerrada exitosamente',
+    position: 'top'
+  });
+};
+
 const formatCurrency = (value: number | null | undefined): string => {
   return (value ?? 0).toLocaleString('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
 };
+
+watch(() => clientStore.isLoggedIn, async (newValue) => {
+  if (newValue) {
+    await fetchTransactions();
+  }
+});
+watch(() => clientStore.clientData.saldo, async (newValue) => {
+  if (newValue) {
+    await fetchTransactions();
+  }
+});
+
+onMounted(async () => {
+  if (clientStore.isLoggedIn) {
+    await fetchTransactions();
+  }
+});
+
 </script>
 
 <style scoped>

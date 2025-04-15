@@ -24,4 +24,9 @@ export class WalletController {
   async totalBalance(@Body() payload: any) {
     return this.walletService.totalBalance(payload);
   }
+
+  @Post('transactions')
+  async transactions(@Body() payload: any) {
+    return await this.walletService.transactions(payload);
+  }
 }

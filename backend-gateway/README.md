@@ -1,4 +1,4 @@
-## Epayco Gateaway API
+## Epayco Gateway API
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 

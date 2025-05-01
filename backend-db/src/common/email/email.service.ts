@@ -20,7 +20,7 @@ export class EmailService {
 
   async sendMail(to: string, subject: string, text: string) {
     const mailOptions = {
-      from: '"Billetera Virtual" <epayco@example.com>',
+      from: process.env.MAIL_FROM,
       to,
       subject,
       text,
